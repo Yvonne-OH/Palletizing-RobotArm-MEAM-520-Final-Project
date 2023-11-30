@@ -64,12 +64,10 @@ if __name__ == "__main__":
     FK=FK()
     IK_pos=lib.IK_position_null.IK()
 
-    Basic_action.move_to_search_position(arm)
-
+    Basic_action.move_to_static_initial_search_position(arm)
     p, T = FK.forward(arm.get_positions())
-    H_ee_camera = detector.get_H_ee_camera()
-    H_ee_camera[0][3]+=0.05
-    print("H_ee_camera", '\n',H_ee_camera)
+
+    H_ee_camera = Frame_Trans.EE_cam_offset(detector.get_H_ee_camera(),'x',0.0)
 
     Stacked_Layers=0
 
@@ -81,18 +79,10 @@ if __name__ == "__main__":
         # Get the block pose in camera frame
 
         Block_pos_robot_frame = Frame_Trans.compute_object_pose(Pose, H_ee_camera, T, T_obj_to_end)
-        arm.open_gripper()
-        Block_pos_robot_frame[2, 3] += 0.10
-        q_pseudo, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(Block_pos_robot_frame, seed,
-                                                                                  method='J_pseudo', alpha=.5)
-        arm.safe_move_to_position(q_pseudo)
-        Block_pos_robot_frame[2, 3] -= 0.10
-        q_pseudo, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(Block_pos_robot_frame, seed=q_pseudo,
-                                                                                  method='J_pseudo', alpha=.5)
-        arm.safe_move_to_position(q_pseudo)
-        arm.close_gripper()
 
-        # move_to_search_position()
+        Basic_action.static_pre_grab(arm,Block_pos_robot_frame, IK_pos, arm.get_positions())
+        Basic_action.static_grab(arm,Block_pos_robot_frame, IK_pos, arm.get_positions())
+
         Block_target_robot_frame = np.array([
             [1.00000000e+00, -1.86573745e-09, -5.89874375e-09, 5.62000000e-01],
             [-1.86573734e-09, -1.00000000e+00, -2.44297205e-09, -1.69000000e-01],
@@ -100,39 +90,11 @@ if __name__ == "__main__":
             [0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 1.00000000e+00]
         ])
 
+        Basic_action.static_place(arm,Block_target_robot_frame,Stacked_Layers,IK_pos,arm.get_positions())
+        Basic_action.static_leave(arm, FK.forward(arm.get_positions())[1], IK_pos,arm.get_positions())
+        print("Layer ", Stacked_Layers, "finished, ", "Time: ", time_in_seconds())
 
-        Block_target_robot_frame[2, 3] += 0.15+0.05*Stacked_Layers
-        q_pseudo, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(Block_target_robot_frame, seed,
-                                                                                  method='J_pseudo', alpha=.5)
-        arm.safe_move_to_position(q_pseudo)
-        Block_target_robot_frame[2, 3] -= 0.15
-        q_pseudo, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(Block_target_robot_frame,
-                                                                                  seed=q_pseudo,
-                                                                                  method='J_pseudo', alpha=.5)
-        arm.safe_move_to_position(q_pseudo)
-
-        arm.open_gripper()
-
-        Block_target_robot_frame[2, 3] += 0.15
-        q_pseudo, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(Block_target_robot_frame,
-                                                                                  seed=q_pseudo,
-                                                                                  method='J_pseudo', alpha=.5)
-        arm.safe_move_to_position(q_pseudo)
-        Basic_action.move_to_search_position(arm)
+        Basic_action.move_to_static_pre_search_position(arm)
 
         Stacked_Layers += 1
 
-
-
-    """
-
-
-    #while (check_goal(q_pseudo, arm.get_positions())):
-        #pass
-    #arm.close_gripper()
-    #print(" ")
-    
-    
-    # Move around...
-    
-    # END STUDENT CODE"""

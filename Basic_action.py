@@ -1,6 +1,72 @@
 import numpy as np
+import rospy
+# Common interfaces for interacting with both the simulation and real environments!
+from core.interfaces import ArmController
+from core.interfaces import ObjectDetector
 
-def move_to_static_search_position(arm):
+# for timing that is consistent with simulation or real time as appropriate
+from core.utils import time_in_seconds
+
+def move_to_static_initial_search_position(arm):
+    t = time_in_seconds()
     q_static_search=np.array([ 0.28856799,0.20482551,0.08279217,-1.06908351,-0.01759427,1.27327017,1.14987698])
     arm.safe_move_to_position(q_static_search)
+    print("move_to_static_search_position: ", time_in_seconds() - t)
     print("Search Pos arrived!")
+
+def move_to_static_pre_search_position(arm):
+    t = time_in_seconds()
+    q_static_search=np.array([ 0.20013175,0.04376772,0.15780585,-1.8106012,-0.00716238,1.8538347, 1.1451915 ])
+    arm.safe_move_to_position(q_static_search)
+    print("move_to_static_pre_search_position: ", time_in_seconds() - t)
+    print("Pre Search Pos arrived!")
+
+def static_pre_grab(arm,Block_H,IK_pos,seed):
+    t = time_in_seconds()
+    arm.open_gripper()
+    Block_pos_robot_frame=np.copy(Block_H)
+    Block_pos_robot_frame[2, 3] += 0.10
+    q_pseudo, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(Block_pos_robot_frame, seed,
+                                                                              method='J_pseudo', alpha=.5)
+    print("static_pre_grab_Plan_Time: ", time_in_seconds() - t)
+    arm.safe_move_to_position(q_pseudo)
+    print("static_pre_grab_Time: ", time_in_seconds() - t)
+    return "success"
+
+def static_grab(arm,Block_H,IK_pos,seed):
+    t = time_in_seconds()
+    Block_pos_robot_frame=np.copy(Block_H)
+    q_pseudo, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(Block_pos_robot_frame, seed=seed,
+                                                                              method='J_pseudo', alpha=.5)
+    print("static_grab_Plan_Time: ", time_in_seconds() - t)
+    arm.safe_move_to_position(q_pseudo)
+    arm.close_gripper()
+    print("static_grab_Time: ", time_in_seconds() - t)
+    return "success"
+
+def static_place(arm,Target_H,Stacked_Layers,IK_pos,seed):
+    t=time_in_seconds()
+    Block_target_robot_frame = np.copy(Target_H)
+    Block_target_robot_frame[2, 3] += (0.00+0.05 * Stacked_Layers)
+    q_pseudo, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(Block_target_robot_frame, seed=seed,
+                                                                              method='J_pseudo', alpha=.5)
+    print("static_place_Plan_Time: ", time_in_seconds() - t)
+    arm.safe_move_to_position(q_pseudo)
+    arm.open_gripper()
+    print("static_place_Time: ", time_in_seconds() - t)
+
+    return "success"
+
+def static_leave(arm,Target_H,IK_pos,seed):
+    t = time_in_seconds()
+    Block_target_robot_frame = np.copy(Target_H)
+    Block_target_robot_frame[2, 3] += 0.10
+    q_pseudo, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(Block_target_robot_frame, seed=seed,
+                                                                              method='J_pseudo', alpha=.5)
+    print("static_Leave_Plan_Time: ", time_in_seconds() - t)
+    arm.safe_move_to_position(q_pseudo)
+    arm.open_gripper()
+    print("static_Leave_Time: ", time_in_seconds() - t)
+    return "success"
+
+
