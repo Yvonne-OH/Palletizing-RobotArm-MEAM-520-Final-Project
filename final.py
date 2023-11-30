@@ -46,6 +46,8 @@ if __name__ == "__main__":
     input("\nWaiting for start... Press ENTER to begin!\n") # get set!
     print("Go!\n") # go!
 
+    t_start=time_in_seconds()
+
 
     # STUDENT CODE HERE
 
@@ -61,6 +63,8 @@ if __name__ == "__main__":
                              [0, 0, -1, 0],
                              [0, 0, 0, 1]])
 
+    Place_seed=np.array([-0.12021102 , 0.20148171 ,-0.17911063 ,-2.02175873 , 0.0447598 ,  2.21961924,0.46256746])
+
     FK=FK()
     IK_pos=lib.IK_position_null.IK()
 
@@ -70,6 +74,13 @@ if __name__ == "__main__":
     H_ee_camera = Frame_Trans.EE_cam_offset(detector.get_H_ee_camera(),'x',0.0)
 
     Stacked_Layers=0
+
+    Block_num=len(detector.get_detections()[0])
+    for i in range(Block_num):
+        remain_num=0
+        if remain_num<=0:
+            break
+        pass
 
     # Detect and go through all the static blocks
     for (name, pose) in detector.get_detections():
@@ -90,11 +101,13 @@ if __name__ == "__main__":
             [0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 1.00000000e+00]
         ])
 
-        Basic_action.static_place(arm,Block_target_robot_frame,Stacked_Layers,IK_pos,arm.get_positions())
+        Basic_action.static_place(arm,Block_target_robot_frame,Stacked_Layers,IK_pos,Place_seed)
         Basic_action.static_leave(arm, FK.forward(arm.get_positions())[1], IK_pos,arm.get_positions())
-        print("Layer ", Stacked_Layers, "finished, ", "Time: ", time_in_seconds())
+
 
         Basic_action.move_to_static_pre_search_position(arm)
 
         Stacked_Layers += 1
+
+    print("Complete! ", "Time: ", time_in_seconds()-t_start)
 
