@@ -49,8 +49,8 @@ if __name__ == "__main__":
     
     seed = start_position
     dynamic_pre_grab_seed = np.array([-1.18062,  0.73451, -0.55257, -1.33372,  0.39019,  1.96088,  0.591 ]) # Dyn Grab Pos
-    # NB_seed = np.array([-pi/2,0,0,-pi/2,0,pi/2,pi/4])
-
+    Place_seed=np.array([-0.12021102-0.3 , 0.20148171 ,-0.17911063 ,-2.02175873 , 0.0447598 ,  2.21961924,0.46256746])
+    # NB_seed = np.array([0,0,0,-pi/2,0,pi/2,pi/4])
 
     T_cam_to_end = np.array([[0, 1, 0, 0],
                             [-1, 0, 0, 0.05],
@@ -62,37 +62,59 @@ if __name__ == "__main__":
                             [0, 0, -1, 0],
                             [0, 0, 0, 1]])
 
+    Pre_grab_pos = np.array([-1.12638,  1.36176-0.25, -0.51741, -0.58107, 0.18119,  2.7103,   1.13345])
+    Pre_place_pos = np.array([-0.01779206-0.3, -0.76012354,  0.01978261, -2.34205014, 0.02984053, 1.54119353, 0.75344866])
+
     FK=FK()
     IK_pos=lib.IK_position_null.IK()
-
     # arm.safe_move_to_position(np.array([-0.74949,  0.67183, -0.51995, -1.42384,  0.34769,  2.00397+1, 0.707]))
     # arm.safe_move_to_position(np.array([-0.79092,  0.64844+0.175, -0.57464, -1.65605,  0.41212,  2.18094+1,  0.8429 ])) # bianyuan
-    arm.safe_move_to_position(np.array([-1.11199,  1.33319, -0.53348, -0.6103,   0.20876,  2.7061,   1.11345])) ### Nice Result Up-to-date DO NOT DELETE!
+    # arm.safe_move_to_position(np.array([-1.11199,  1.33319, -0.53348, -0.6103,   0.20876,  2.7061,   1.11345])) ### Nice Result 
     # Dynamic_Basic_action.move_to_dynamic_initial_search_position(arm)
     p, T = FK.forward(arm.get_positions())
 
     H_ee_camera = Frame_Trans.EE_cam_offset(detector.get_H_ee_camera(),'x',0.0)
 
     Stacked_Layers=0
+    Block_target_robot_frame = np.array([
+            [1.00000000e+00, -1.86573745e-09, -5.89874375e-09, 5.62000000e-01],
+            [-1.86573734e-09, -1.00000000e+00, -2.44297205e-09, -1.69000000e-01],
+            [-5.89874377e-09, 2.44297209e-09, -1.00000000e+00, 2.50000000e-01],
+            [0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 1.00000000e+00]
+        ])
+
+    arm.open_gripper()
+    arm.safe_move_to_position(Pre_grab_pos) ### Move to position above the pre-grab!
+    t = time_in_seconds()
+   
+    while not rospy.is_shutdown(): # ############ if static tasks is completed NEEDS TO BE CHANGED  IMPORTANT!!!!! ##################
+        arm.safe_move_to_position(np.array([-1.12638,  1.36176, -0.51741, -0.58107, 0.18119,  2.7103,   1.13345])) ### Nice Pregrab pos DO NOT DELETE!
+        # Judge Function determining whether the block is grabbed successfully.
+        def is_block_grabbed(arm):
+            gripper_state = arm.get_gripper_state()
+            positions = gripper_state['position']
+            width = abs(positions[1] + positions[0]) # detect the width between the jaws
+            print("The grip width is: ",width)
+            return width <= 0.07 # Temp
+            # return 0.05 <= width <= 0.07 # Simulation
+            # return 0.048 <= width <= 0.055 # Real condition
+
+        # test = is_block_grabbed(arm)
+        while not rospy.is_shutdown(): # IMPORTANT: The loop condition might need to be changed!
+            arm.close_gripper()
+            print("loop grip closed")
+            # Check if the block is grabbed
+            if is_block_grabbed(arm):
+                print("Block grabbed successfully!")
+                # If grabbed successfully, put the block to the aim stack
+                arm.safe_move_to_position(Pre_place_pos)
+                Dynamic_Basic_action.dynamic_place(arm,Block_target_robot_frame,Stacked_Layers,IK_pos,Place_seed)
+                Dynamic_Basic_action.dynamic_leave(arm, FK.forward(arm.get_positions())[1], IK_pos,arm.get_positions())
+                break
+            else:
+                print("Grab unsuccessful, retrying...")
+            arm.open_gripper()
+            print("loop grip opened!")
+        arm.safe_move_to_position(Pre_grab_pos) ### Move to position above the pre-grab!
+        Stacked_Layers += 1
     
-    ############################
-    # Detect the Dynamic Blocks 
-    ############################
-
-    # for (name, pose) in detector.get_detections():
-    #     print(name, '\n', pose)
-    #     Pose = np.array(pose)
-    #     # Get the block pose in camera frame
-    #     Block_pos_robot_frame = Frame_Trans.compute_object_pose(Pose, H_ee_camera, T, T_obj_to_end)
-
-    #     # Ignore THIS
-    #     # print(Block_pos_robot_frame)
-    #     # q_test, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(Block_pos_robot_frame, dynamic_pre_grab_seed,
-    #                                                                             # method='J_pseudo', alpha=.5)    
-    #     # arm.safe_move_to_position(q_test)
-
-    #     Dynamic_Basic_action.dynamic_pre_grab(arm,Block_pos_robot_frame, IK_pos, dynamic_pre_grab_seed)
-    #     # Basic_action.static_grab(arm,Block_pos_robot_frame, IK_pos, pre_grab_seed)
-    
-
-

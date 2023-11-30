@@ -8,13 +8,13 @@ from core.interfaces import ObjectDetector
 from core.utils import time_in_seconds
 
 
-def move_to_dynamic_initial_search_position(arm): # Search Position for dynamic blocks
-    t = time_in_seconds()
-    q_dynamic_search=np.array([-1.27169, 0.58862, -0.5554,  -0.84653,  0.3033,   1.37183,  0.66958])
-    # q_dynamic_search=np.array([-1.16812,  0.70977, -0.58861, -1.2796,   0.3893,  1.87717,  0.59601]) # lower search altitude
-    arm.safe_move_to_position(q_dynamic_search)
-    print("move_to_dynamic_search_position: ", time_in_seconds() - t)
-    print("Dynamic Search Pos arrived!")
+# def move_to_dynamic_initial_search_position(arm): # Search Position for dynamic blocks
+#     t = time_in_seconds()
+#     q_dynamic_search=np.array([-1.27169, 0.58862, -0.5554,  -0.84653,  0.3033,   1.37183,  0.66958])
+#     # q_dynamic_search=np.array([-1.16812,  0.70977, -0.58861, -1.2796,   0.3893,  1.87717,  0.59601]) # lower search altitude
+#     arm.safe_move_to_position(q_dynamic_search)
+#     print("move_to_dynamic_search_position: ", time_in_seconds() - t)
+#     print("Dynamic Search Pos arrived!")
 
 #######################################################################################################
 
@@ -25,30 +25,18 @@ def move_to_dynamic_initial_search_position(arm): # Search Position for dynamic 
 #     print("move_to_static_pre_search_position: ", time_in_seconds() - t)
 #     print("Pre Search Pos arrived!")
 
-def dynamic_pre_grab(arm,Block_H,IK_pos,seed):
-    t = time_in_seconds()
-    arm.open_gripper()
-    Block_pos_robot_frame=np.copy(Block_H)
-    # Block_pos_robot_frame[0, 3] -= 0.05
-    q_pseudo, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(Block_pos_robot_frame, seed,
-                                                                                method='J_pseudo', alpha=.5)
-    print("dynamic_pre_grab_Plan_Time: ", time_in_seconds() - t)
-    arm.safe_move_to_position(q_pseudo)
-    print("dynamic_pre_grab_Time: ", time_in_seconds() - t)
-    print("q_pseudo: ",q_pseudo)
-    return "success"
-
-# def dynamic_grab(arm,Block_H,IK_pos,seed):
+# def dynamic_pre_grab(arm,Block_H,IK_pos,seed):
 #     t = time_in_seconds()
+#     arm.open_gripper()
 #     Block_pos_robot_frame=np.copy(Block_H)
-#     q_pseudo, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(Block_pos_robot_frame, seed=seed,
+#     # Block_pos_robot_frame[0, 3] -= 0.05
+#     q_pseudo, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(Block_pos_robot_frame, seed,
 #                                                                                 method='J_pseudo', alpha=.5)
-#     print("dynamic_grab_Plan_Time: ", time_in_seconds() - t)
+#     print("dynamic_pre_grab_Plan_Time: ", time_in_seconds() - t)
 #     arm.safe_move_to_position(q_pseudo)
-#     arm.close_gripper()
-#     print("dynamic_grab_Time: ", time_in_seconds() - t)
+#     print("dynamic_pre_grab_Time: ", time_in_seconds() - t)
+#     print("q_pseudo: ",q_pseudo)
 #     return "success"
-##################################################################################################
 
 def dynamic_place(arm,Target_H,Stacked_Layers,IK_pos,seed):
     t=time_in_seconds()
