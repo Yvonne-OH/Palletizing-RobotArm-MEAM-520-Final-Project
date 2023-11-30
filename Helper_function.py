@@ -62,3 +62,16 @@ def check_rms_threshold(q_target, q_current, threshold=0.1):
         return True
     else:
         return False
+
+
+def extract_pose_values(all_block_pose):
+    x_values = []
+    y_values = []
+    z_angle_values = []
+
+    for pose in all_block_pose:
+        x_values.append(pose[0, 3])
+        y_values.append(pose[1, 3])
+        z_angle_values.append(np.arctan2(pose[1, 0], pose[0, 0]))
+
+    return x_values, y_values, z_angle_values

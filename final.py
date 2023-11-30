@@ -12,15 +12,16 @@ from core.interfaces import ObjectDetector
 from core.utils import time_in_seconds
 
 # self-dev Lib
-from lib.IK_velocity_null import IK_velocity_null
 from lib.calculateFK import FK
-from lib.calcAngDiff import calcAngDiff
 import lib.IK_position_null
 import Helper_function
 import Frame_Trans
 import Basic_action
+import Collision_detection
 
 import numpy as np
+import Decision
+import matplotlib.pyplot as plt
 
 
 if __name__ == "__main__":
@@ -50,9 +51,6 @@ if __name__ == "__main__":
 
 
     # STUDENT CODE HERE
-
-    seed = start_position
-
     T_cam_to_end = np.array([[0, 1, 0, 0],
                              [-1, 0, 0, 0.05],
                              [0, 0, 1, 0],
@@ -63,6 +61,14 @@ if __name__ == "__main__":
                              [0, 0, -1, 0],
                              [0, 0, 0, 1]])
 
+    Block_target_robot_frame = np.array([
+        [1.00000000e+00, -1.86573745e-09, -5.89874375e-09, 5.62000000e-01],
+        [-1.86573734e-09, -1.00000000e+00, -2.44297205e-09, -1.69000000e-01],
+        [-5.89874377e-09, 2.44297209e-09, -1.00000000e+00, 2.50000000e-01],
+        [0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 1.00000000e+00]
+    ])
+
+    seed = start_position
     Place_seed=np.array([-0.12021102 , 0.20148171 ,-0.17911063 ,-2.02175873 , 0.0447598 ,  2.21961924,0.46256746])
 
     FK=FK()
@@ -73,41 +79,35 @@ if __name__ == "__main__":
 
     H_ee_camera = Frame_Trans.EE_cam_offset(detector.get_H_ee_camera(),'x',0.0)
 
-    Stacked_Layers=0
+
 
     Block_num=len(detector.get_detections()[0])
-    for i in range(Block_num):
-        remain_num=0
-        if remain_num<=0:
-            break
-        pass
+    print(Block_num)
+    Stacked_Layers=0
+    Remaining_blocks=Block_num
 
-    # Detect and go through all the static blocks
-    for (name, pose) in detector.get_detections():
-        print(name, '\n', pose)
+    for iteration in range(Block_num):
+        all_block_pose=[pose for name, pose in detector.get_detections()]
+        x_values, y_values, z_angle_values=Helper_function.extract_pose_values(all_block_pose)
+        collision_number=Collision_detection.calculate_collision_numbers(all_block_pose,x_values, y_values, z_angle_values)
+        sorted_collision_number, sorted_all_block_pose=Decision.sort_collision_data(collision_number, all_block_pose)
 
-        Pose = np.array(pose)
+        Pose = np.array(sorted_all_block_pose[0])
+        Collision_detection_index=sorted_collision_number[0]
         # Get the block pose in camera frame
-
-        Block_pos_robot_frame = Frame_Trans.compute_object_pose(Pose, H_ee_camera, T, T_obj_to_end)
+        Block_pos_robot_frame = Frame_Trans.compute_object_pose(Pose, H_ee_camera, T, T_obj_to_end,Collision_detection_index)
 
         Basic_action.static_pre_grab(arm,Block_pos_robot_frame, IK_pos, arm.get_positions())
         Basic_action.static_grab(arm,Block_pos_robot_frame, IK_pos, arm.get_positions())
 
-        Block_target_robot_frame = np.array([
-            [1.00000000e+00, -1.86573745e-09, -5.89874375e-09, 5.62000000e-01],
-            [-1.86573734e-09, -1.00000000e+00, -2.44297205e-09, -1.69000000e-01],
-            [-5.89874377e-09, 2.44297209e-09, -1.00000000e+00, 2.50000000e-01],
-            [0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 1.00000000e+00]
-        ])
-
         Basic_action.static_place(arm,Block_target_robot_frame,Stacked_Layers,IK_pos,Place_seed)
         Basic_action.static_leave(arm, FK.forward(arm.get_positions())[1], IK_pos,arm.get_positions())
 
-
-        Basic_action.move_to_static_pre_search_position(arm)
-
         Stacked_Layers += 1
+        Remaining_blocks -=1
+
+        if Remaining_blocks>0:
+            Basic_action.move_to_static_pre_search_position(arm)
 
     print("Complete! ", "Time: ", time_in_seconds()-t_start)
 

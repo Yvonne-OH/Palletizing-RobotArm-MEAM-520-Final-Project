@@ -67,6 +67,20 @@ def plot_circles(center_list1, center_list2, radius1=0.05 * np.sqrt(2) / 2, radi
     plt.grid(True)
     plt.show()
 
+def calculate_collision_numbers(all_block_pose,x_values, y_values, z_angle_values):
+    collision_number = []
+
+    for i in range(len(all_block_pose)):
+        Gripper_pos_1 = generate_gripper_coordinates(x_values[i], y_values[i], z_angle_values[i])
+        Gripper_pos_2 = generate_gripper_coordinates(x_values[i], y_values[i], z_angle_values[i] - np.pi/2)
+
+        obstacle_map = list(zip(x_values, y_values))
+        del obstacle_map[i]
+
+        collision_number.append([count_intersecting_circles(obstacle_map, Gripper_pos_1),
+                                 count_intersecting_circles(obstacle_map, Gripper_pos_2)])
+
+    return collision_number
 
 if __name__ == "__main__":
     # test x,y,angle

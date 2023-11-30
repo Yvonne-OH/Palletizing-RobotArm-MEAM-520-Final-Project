@@ -6,6 +6,7 @@ from core.interfaces import ObjectDetector
 
 # for timing that is consistent with simulation or real time as appropriate
 from core.utils import time_in_seconds
+import Collision_detection
 
 def Gripper_control(arm,command):
     if command=="open":
