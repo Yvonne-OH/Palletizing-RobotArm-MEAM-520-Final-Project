@@ -76,9 +76,18 @@ if __name__ == "__main__":
 
     Basic_action.move_to_static_initial_search_position(arm)
     p, T = FK.forward(arm.get_positions())
+    '''
+    print(T)
+    T[2][3]-=0.15
+    q_pseudo, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(T, seed,
+                                                                              method='J_pseudo', alpha=.5)
+    print("pre_search",q_pseudo)
+    arm.safe_move_to_position(q_pseudo)'''
+
 
     H_ee_camera = Frame_Trans.EE_cam_offset(detector.get_H_ee_camera(),'x',0.0)
 
+<<<<<<< HEAD
 
 
     Block_num=len(detector.get_detections()[0])
@@ -94,6 +103,38 @@ if __name__ == "__main__":
 
         Pose = np.array(sorted_all_block_pose[0])
         Collision_detection_index=sorted_collision_number[0]
+=======
+    Block_num=len(detector.get_detections())
+    print(Block_num)
+    Stacked_Layers=0
+    Remaining_blocks=Block_num
+
+    for iteration in range(Block_num):
+        print("iteration",iteration)
+        all_block_pose=[pose for name, pose in detector.get_detections()]
+        print("all_block_pose",all_block_pose)
+        if len(all_block_pose)>1:
+            #print("all_block_pose",all_block_pose)
+            x_values, y_values, z_angle_values=Helper_function.extract_pose_values(all_block_pose)
+            collision_number=Collision_detection.calculate_collision_numbers(all_block_pose,x_values, y_values, z_angle_values)
+            print(collision_number)
+            sorted_collision_number, sorted_all_block_pose=Decision.sort_collision_data(collision_number, all_block_pose)
+            print("sorted_collision_number", sorted_collision_number)
+
+            Pose = np.array(sorted_all_block_pose[0])
+            Pose[2][3]= 4.41717247e-01
+            Collision_detection_index=sorted_collision_number[0]
+        else:
+            Pose = all_block_pose[0]
+            print("Pose last:",Pose)
+            print("-----------------------")
+            Pose[2][3] = 4.41717247e-01
+            Collision_detection_index = [0,0]
+
+        H_ee_camera = Frame_Trans.EE_cam_offset(detector.get_H_ee_camera(), 'x', 0.0)
+        print("all_block_pose", Pose)
+        print(Collision_detection_index)
+>>>>>>> c3143e278fb0481d5eadbd3ced85d369b13f7936
         # Get the block pose in camera frame
         Block_pos_robot_frame = Frame_Trans.compute_object_pose(Pose, H_ee_camera, T, T_obj_to_end,Collision_detection_index)
 
@@ -106,6 +147,11 @@ if __name__ == "__main__":
         Stacked_Layers += 1
         Remaining_blocks -=1
 
+<<<<<<< HEAD
+=======
+        print('Remaining_blocks',Remaining_blocks)
+
+>>>>>>> c3143e278fb0481d5eadbd3ced85d369b13f7936
         if Remaining_blocks>0:
             Basic_action.move_to_static_pre_search_position(arm)
 
