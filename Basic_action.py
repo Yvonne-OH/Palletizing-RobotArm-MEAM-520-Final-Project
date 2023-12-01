@@ -6,6 +6,7 @@ from core.interfaces import ObjectDetector
 
 # for timing that is consistent with simulation or real time as appropriate
 from core.utils import time_in_seconds
+import Collision_detection
 
 def Gripper_control(arm,command):
     if command=="open":
@@ -25,7 +26,7 @@ def move_to_static_initial_search_position(arm):
 
 def move_to_static_pre_search_position(arm):
     t = time_in_seconds()
-    q_static_search=np.array([ 0.20013175,0.04376772,0.15780585,-1.8106012,-0.00716238,1.8538347, 1.1451915 ])
+    q_static_search=np.array([ 0.19967448,0.04253223 , 0.15891895 ,-1.68476423 ,-0.00680944 , 1.72674117,1.14490333])
     arm.safe_move_to_position(q_static_search)
     print("move_to_static_pre_search_position: ", time_in_seconds() - t)
     print("Pre Search Pos arrived!")
@@ -54,6 +55,13 @@ def static_grab(arm,Block_H,IK_pos,seed):
     #arm.close_gripper()
     Gripper_control(arm, "close")
     print(arm.get_gripper_state())
+
+    Block_pos_robot_frame[2][3]+=0.10
+    q_pseudo, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(Block_pos_robot_frame, seed=seed,
+                                                                              method='J_pseudo', alpha=.5)
+    arm.safe_move_to_position(q_pseudo)
+
+
     print("static_grab_Time: ", time_in_seconds() - t)
     return "success"
 
