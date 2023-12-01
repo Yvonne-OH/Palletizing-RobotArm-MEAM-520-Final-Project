@@ -1,5 +1,6 @@
 import numpy as np
 import rospy
+import time
 # Common interfaces for interacting with both the simulation and real environments!
 from core.interfaces import ArmController
 from core.interfaces import ObjectDetector
@@ -11,11 +12,16 @@ import Collision_detection
 def Gripper_control(arm,command):
     if command=="open":
         while (arm.get_gripper_state().get('position')[0]<0.0375):
-            arm.open_gripper()
-            print(arm.get_gripper_state().get('position')[0])
+            #arm.open_gripper()
+            arm.exec_gripper_cmd(arm._gripper.MAX_WIDTH * (1 - 1e-2))
+            print("Closing gripper.... Pos:",arm.get_gripper_state().get('position')[0])
     if command == "close":
         while (arm.get_gripper_state().get('position')[0]>0.03):
-            arm.close_gripper()
+            arm.exec_gripper_cmd(0.022)
+            time.sleep(1.0)
+            rospy.sleep(1.0)
+            print("opening gripper.... Pos:",arm.get_gripper_state().get('position')[0])
+            #arm.close_gripper()
 
 def move_to_static_initial_search_position(arm):
     t = time_in_seconds()
