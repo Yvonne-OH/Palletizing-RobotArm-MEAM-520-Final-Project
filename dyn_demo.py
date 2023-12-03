@@ -94,7 +94,7 @@ if __name__ == "__main__":
     t = time_in_seconds()
    
     while not rospy.is_shutdown(): # ############ if static tasks is completed NEEDS TO BE CHANGED  IMPORTANT!!!!! ##################
-        arm.safe_move_to_position(np.array([-1.12638,  1.36176, -0.51741, -0.58107, 0.18119,  2.7103,   1.13345])) ### Nice Pregrab pos DO NOT DELETE!
+        arm.safe_move_to_position(grab_pos)
         # Judge Function determining whether the block is grabbed successfully.
         def is_block_grabbed(arm):
             gripper_state = arm.get_gripper_state()
@@ -125,3 +125,4 @@ if __name__ == "__main__":
         arm.safe_move_to_position(Pre_grab_pos) ### Move to position above the pre-grab!
         Stacked_Layers += 1
     
+
