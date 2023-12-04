@@ -65,10 +65,16 @@ if __name__ == "__main__":
     # Pre_grab_pos = np.array([-1.12638,  1.36176-0.25, -0.51741, -0.58107, 0.18119,  2.7103,   1.13345])
     
     ####################################################################################### VERY IMPORTANT! ######################################
-    Pre_grab_pos = np.array([-2.24349895,  0.69896332,  0.45332957, -1.5018697,  -2.30542716,  3.74539539, -0.81328175]) # 12.1 ##################
-    grab_pos = np.array([-2.10535123,  1.01677975,  0.50319099, -1.16210212, -2.12033052,  3.55645052, -0.92487665])# 12.1 #######################
+    Pre_grab_pos = np.array([ 0.17542, -1.06209, -1.74489, -2.01193, -0.31041,  2.16587, -0.69733]) # 12.4 ################## grab_H y-axis = -0.58
+    grab_pos = np.array([0.73588, -1.39156, -1.73435, -1.11631, -0.5597,   1.80013, -0.64694])# 12.4 #######################
+        # Solved by IK using:
+        # grab_H = np.array([[ 0.70710678, 0, 0.70710678,  4e-4],
+        #                 [0, -1, 0, -0.75],
+        #                 [0.70710678, 0, -0.70710678,  0.23],
+        #                 [ 0.,  0., 0., 1. ]]
+        #                 )
     ##############################################################################################################################################
-    Pre_place_pos = np.array([-0.01779206-0.3, -0.76012354,  0.01978261, -2.34205014, 0.02984053, 1.54119353, 0.75344866])
+    Pre_place_pos = np.array([0.03951, -0.29319, -0.32459, -2.22497,  0.28642,  2.6866,   0.26751]) # 12.4 Block_target_robot_frame z-axis = 0.5m
     
 
     FK=FK()
@@ -83,16 +89,16 @@ if __name__ == "__main__":
 
     Stacked_Layers=0
     Block_target_robot_frame = np.array([
-            [1.00000000e+00, -1.86573745e-09, -5.89874375e-09, 5.62000000e-01],
+            [0.70710678, -1.86573745e-09, 0.70710678, 5.62000000e-01],
             [-1.86573734e-09, -1.00000000e+00, -2.44297205e-09, -1.69000000e-01],
-            [-5.89874377e-09, 2.44297209e-09, -1.00000000e+00, 2.50000000e-01],
+            [0.70710678, 2.44297209e-09, -0.70710678, 2.50000000e-01],
             [0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 1.00000000e+00]
         ])
 
     arm.open_gripper()
     arm.safe_move_to_position(Pre_grab_pos) ### Move to position above the pre-grab!
     t = time_in_seconds()
-   
+
     while not rospy.is_shutdown(): # ############ if static tasks is completed NEEDS TO BE CHANGED  IMPORTANT!!!!! ##################
         arm.safe_move_to_position(grab_pos)
         # Judge Function determining whether the block is grabbed successfully.
@@ -101,9 +107,9 @@ if __name__ == "__main__":
             positions = gripper_state['position']
             width = abs(positions[1] + positions[0]) # detect the width between the jaws
             print("The grip width is: ",width)
-            return width <= 0.07 # Temp
+            # return width <= 0.07 # Temp
             # return 0.05 <= width <= 0.07 # Simulation
-            # return 0.048 <= width <= 0.055 # Real condition
+            return 0.048 <= width <= 0.051 # Real condition
 
         # test = is_block_grabbed(arm)
         while not rospy.is_shutdown(): # IMPORTANT: The loop condition might need to be changed!
