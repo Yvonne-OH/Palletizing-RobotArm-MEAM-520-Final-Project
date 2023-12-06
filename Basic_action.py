@@ -86,15 +86,48 @@ def static_grab(arm,Block_H,IK_pos,seed):
 def static_place(arm,Target_H,Stacked_Layers,IK_pos,seed):
     t=time_in_seconds()
     Block_target_robot_frame = np.copy(Target_H)
-    Block_target_robot_frame[2, 3] += (0.05+0.05 * Stacked_Layers)
+    #Block_target_robot_frame[2, 3] += (0.05+0.05 * Stacked_Layers)
+    Block_target_robot_frame[2, 3] += (0.2+0.05 * Stacked_Layers)
+    T_now = Block_target_robot_frame
     q_pseudo, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(Block_target_robot_frame, seed=seed,
                                                                               method='J_pseudo', alpha=.5)
     arm.safe_move_to_position(q_pseudo)
-    Block_target_robot_frame[2, 3] -= 0.05
+    Block_target_robot_frame[2, 3] -= 0.2
+    #In case of inaccuracy, only tune the x and y position, and check z
+    #we know that the block orientation is certain after last placement
+    #z position: see if the last block falls off
+    if Stacked_Layers >= 1:
+        dete = ObjectDetector()
+        ideal_z = Block_target_robot_frame[2, 3]
+        all_block_pose=[pose for name, pose in dete.get_detections()]
+        #get the highest block's x, y and z
+        high_x = Block_target_robot_frame[0, 3]
+        high_y = Block_target_robot_frame[1, 3]
+        high_z = Block_target_robot_frame[2, 3]
+        #if not detected, do as expected
+        print("Number of stack detected", len(all_block_pose),'\n')
+        if len(all_block_pose):
+            high_z = 0
+            for Transmat in all_block_pose:
+                Tran = T_now @ Transmat
+                print("Transmat",Tran,'\n')
+                if high_z < Tran[2,3]:
+                    high_x = Tran[0,3]
+                    high_y = Tran[1,3]
+                    high_z = Tran[2,3]    
+            Block_target_robot_frame[0, 3] = high_x
+            Block_target_robot_frame[1, 3] = high_y
+        #if last block fall off, reduce z
+        if high_z < (ideal_z - 0.04):
+            print("Last Block Fall!",'\n')
+            ideal_z -= 0.05
+        Block_target_robot_frame[2, 3] = ideal_z
+        print("Place Z: ", Block_target_robot_frame[2,3],'\n')
     q_pseudo, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(Block_target_robot_frame, seed=arm.get_positions(),
                                                                               method='J_pseudo', alpha=.5)
     #print("pre_place", q_pseudo)
     print("static_place_Plan_Time: ", time_in_seconds() - t)
+    
     arm.safe_move_to_position(q_pseudo)
     print(arm.get_gripper_state())
     #arm.open_gripper()
