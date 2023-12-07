@@ -14,11 +14,13 @@ def EE_cam_offset(H,axis,distance):
     return H
 
 def adjust_pose(Pose):
+    Pose1=Pose
+    print("Adjust: ",np.abs(Pose[2,1]))
     if np.abs(Pose[2, 1]) > 0.93:
         Pose[:3, :3] = np.concatenate((Pose[:3, 2].reshape(3, 1), Pose[:3, 0].reshape(3, 1), Pose[:3, 1].reshape(3, 1)), axis=1)
     if np.abs(Pose[2, 0]) > 0.93:
         Pose[:3, :3] = np.concatenate((Pose[:3, 1].reshape(3, 1), Pose[:3, 2].reshape(3, 1), Pose[:3, 0].reshape(3, 1)), axis=1)
-    return Pose
+    return Pose1
 
 def compute_object_pose(Pose, H_ee_camera, T, T_obj_to_end,Collision_detection):
     Pose = np.array(Pose)

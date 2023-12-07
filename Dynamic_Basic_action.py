@@ -3,6 +3,7 @@ import rospy
 # Common interfaces for interacting with both the simulation and real environments!
 from core.interfaces import ArmController
 from core.interfaces import ObjectDetector
+from Basic_action import Gripper_control
 
 # for timing that is consistent with simulation or real time as appropriate
 from core.utils import time_in_seconds
@@ -41,12 +42,20 @@ from core.utils import time_in_seconds
 def dynamic_place(arm,Target_H,Stacked_Layers,IK_pos,seed):
     t=time_in_seconds()
     Block_target_robot_frame = np.copy(Target_H)
-    Block_target_robot_frame[2, 3] += (0.00+0.05 * Stacked_Layers)
+    Block_target_robot_frame[2, 3] += (0.03+0.05 * Stacked_Layers)
     q_pseudo, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(Block_target_robot_frame, seed=seed,
-                                                                                method='J_pseudo', alpha=.5)
-    print("dynamic_place_Plan_Time: ", time_in_seconds() - t)
+                                                                              method='J_pseudo', alpha=.5)
     arm.safe_move_to_position(q_pseudo)
-    arm.open_gripper()
+    Block_target_robot_frame[2, 3] -= 0.05
+    q_pseudo, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(Block_target_robot_frame, seed=arm.get_positions(),
+                                                                              method='J_pseudo', alpha=.5)
+    #print("pre_place", q_pseudo)
+    print("static_place_Plan_Time: ", time_in_seconds() - t)
+    arm.safe_move_to_position(q_pseudo)
+    print(arm.get_gripper_state())
+    #arm.open_gripper()
+    Gripper_control(arm, "open")
+    print(arm.get_gripper_state())
     print("dynamic_place_Time: ", time_in_seconds() - t)
 
     return "success"
@@ -54,12 +63,17 @@ def dynamic_place(arm,Target_H,Stacked_Layers,IK_pos,seed):
 def dynamic_leave(arm,Target_H,IK_pos,seed):
     t = time_in_seconds()
     Block_target_robot_frame = np.copy(Target_H)
-    Block_target_robot_frame[2, 3] += 0.10
+    Block_target_robot_frame[2, 3] += 0.2 # 12.6
     q_pseudo, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(Block_target_robot_frame, seed=seed,
-                                                                                method='J_pseudo', alpha=.5)
+                                                                              method='J_pseudo', alpha=.5)
+    arm.safe_move_to_position(q_pseudo)
+    Block_target_robot_frame[0, 3] -= 0.2  # 12.6: 离开的时候再x方向上往回移动20cm，以防碰撞到放好的stack。
+    q_pseudo, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(Block_target_robot_frame, seed=seed,
+                                                                              method='J_pseudo', alpha=.5)
     print("dynamic_Leave_Plan_Time: ", time_in_seconds() - t)
     arm.safe_move_to_position(q_pseudo)
-    arm.open_gripper()
+    #arm.open_gripper()
+    Gripper_control(arm, "open")
     print("dynamic_Leave_Time: ", time_in_seconds() - t)
     return "success"
 

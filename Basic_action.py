@@ -13,14 +13,17 @@ def Gripper_control(arm,command):
     if command=="open":
         while (arm.get_gripper_state().get('position')[0]<0.0375):
             #arm.open_gripper()
-            arm.exec_gripper_cmd(arm._gripper.MAX_WIDTH * (1 - 1e-2))
-            print("Closing gripper.... Pos:",arm.get_gripper_state().get('position')[0])
+            #arm.exec_gripper_cmd(0.05,force=0.1)
+            
+            arm.exec_gripper_cmd(arm._gripper.MAX_WIDTH * (1 - 1e-2),force=0.1)
+            rospy.sleep(1.0)
+            print("Opening gripper.... Pos:",arm.get_gripper_state().get('position')[0])
     if command == "close":
         while (arm.get_gripper_state().get('position')[0]>0.03):
-            arm.exec_gripper_cmd(0.022)
-            time.sleep(1.0)
+            arm.exec_gripper_cmd(0.0,force=0)
+            #time.sleep(1.0)
             rospy.sleep(1.0)
-            print("opening gripper.... Pos:",arm.get_gripper_state().get('position')[0])
+            print("closing gripper.... Pos:",arm.get_gripper_state().get('position')[0])
             #arm.close_gripper()
 
 def move_to_static_initial_search_position(arm,team):

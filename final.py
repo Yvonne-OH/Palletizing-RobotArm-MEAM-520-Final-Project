@@ -123,7 +123,9 @@ if __name__ == "__main__":
             Collision_detection_index = [0,0]
 
         #adjust Camera Offset
-        H_ee_camera = Frame_Trans.EE_cam_offset(detector.get_H_ee_camera(), 'x', 0.0)
+        H_ee_camera = Frame_Trans.EE_cam_offset(detector.get_H_ee_camera(), 'x', 0.035)
+        H_ee_camera = Frame_Trans.EE_cam_offset(H_ee_camera, 'y', -0.01)
+
 
         print("all_block_pose", Pose)
         print(Collision_detection_index)

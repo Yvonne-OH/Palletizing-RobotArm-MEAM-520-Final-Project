@@ -82,7 +82,8 @@ if __name__ == "__main__":
                 [0.70710678, 2.44297209e-09, -0.70710678, 2.50000000e-01],
                 [0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 1.00000000e+00]
             ])
-        Pre_place_pos = np.array([0.03951, -0.29319, -0.32459, -2.22497,  0.28642,  2.6866,   0.26751]) # 12.4 Block_target_robot_frame z-axis = 0.5m
+        # Pre_place_pos = np.array([0.03951, -0.29319, -0.32459, -2.22497,  0.28642,  2.6866,   0.26751]) # 12.4 Block_target_robot_frame z-axis = 0.5m
+        Pre_place_pos = np.array([-0.17131, -0.29179, -0.14215, -1.98463,  0.2873,  2.42964, 0.31471]) # 12.6 Block_target_robot_frame z-axis = 0.6m
 
     else:
         # Pre_grab_pos = np.array([ 2.16340264,  0.3476119,  -0.4625854,  -2.30795204,  0.71305166,  3.53857139,  0.56017701]) # 12.1 ##################
@@ -103,7 +104,8 @@ if __name__ == "__main__":
                 [0.70710678, 0, -0.70710678, 2.50000000e-01],
                 [0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 1.00000000e+00]
             ]) 
-        Pre_place_pos = np.array([0.05229, -0.00035,  0.00407, -1.76799,  0.79962,  1.74955, -0.88582]) # 12.4 
+        # Pre_place_pos = np.array([0.05229, -0.00035,  0.00407, -1.76799,  0.79962,  1.74955, -0.88582]) # 12.4 
+        Pre_place_pos = np.array([0.01909,  0.03751,  0.01723, -1.48918,  0.78321, 1.56588, -0.72771]) # 12.6
 
 
     FK=FK()
@@ -129,9 +131,9 @@ if __name__ == "__main__":
             positions = gripper_state['position']
             width = abs(positions[1] + positions[0]) # detect the width between the jaws
             print("The grip width is: ",width)
-            return width <= 0.07 # Temp
+            # return width <= 0.07 # Temp
             # return 0.05 <= width <= 0.07 # Simulation
-            # return 0.048 <= width <= 0.051 # Real condition
+            return 0.038 <= width <= 0.051 # Real condition
 
         # test = is_block_grabbed(arm)
         while not rospy.is_shutdown(): # IMPORTANT: The loop condition might need to be changed!
@@ -149,6 +151,7 @@ if __name__ == "__main__":
                 print("Grab unsuccessful, retrying...")
             # arm.open_gripper()
             Gripper_control(arm, "open")
+            rospy.sleep(5.0) # 12.6：增加开爪子时间
             print("loop grip opened!")
         arm.safe_move_to_position(Pre_grab_pos) ### Move to position above the pre-grab!
         Stacked_Layers += 1
