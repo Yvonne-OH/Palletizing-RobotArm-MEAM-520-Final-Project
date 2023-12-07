@@ -42,11 +42,11 @@ from core.utils import time_in_seconds
 def dynamic_place(arm,Target_H,Stacked_Layers,IK_pos,seed):
     t=time_in_seconds()
     Block_target_robot_frame = np.copy(Target_H)
-    Block_target_robot_frame[2, 3] += (0.03+0.05 * Stacked_Layers)
+    Block_target_robot_frame[2, 3] += (0.05+0.05 * Stacked_Layers)
     q_pseudo, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(Block_target_robot_frame, seed=seed,
                                                                               method='J_pseudo', alpha=.5)
     arm.safe_move_to_position(q_pseudo)
-    Block_target_robot_frame[2, 3] -= 0.03
+    Block_target_robot_frame[2, 3] -= 0.05
     q_pseudo, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(Block_target_robot_frame, seed=arm.get_positions(),
                                                                               method='J_pseudo', alpha=.5)
     #print("pre_place", q_pseudo)
