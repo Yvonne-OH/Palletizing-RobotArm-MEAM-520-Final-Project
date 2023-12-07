@@ -75,3 +75,17 @@ def extract_pose_values(all_block_pose):
         z_angle_values.append(np.arctan2(pose[1, 0], pose[0, 0]))
 
     return x_values, y_values, z_angle_values
+
+def quickly_cal_H(IK_pos,H_start,x,y,z,rx,ry,rz,seed):
+
+    H_start = translate_end_effector(H_start, 'x', x)
+    H_start = translate_end_effector(H_start, 'y', y)
+    H_start = translate_end_effector(H_start, 'z', z)
+    H_start = rotate_end_effector(H_start, 'x', rx)
+    H_start = rotate_end_effector(H_start, 'y', ry)
+    H_start = rotate_end_effector(H_start, 'z', rz)
+    q_pseudo, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(H_start, seed=seed,
+                                                                              method='J_pseudo', alpha=.5)
+
+    print("Quickly_Determine_q",q_pseudo)
+    return q_pseudo

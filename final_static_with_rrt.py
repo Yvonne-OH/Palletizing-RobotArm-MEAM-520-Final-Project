@@ -24,6 +24,7 @@ import numpy as np
 import Decision
 import matplotlib.pyplot as plt
 
+import rrt from new_rrt
 
 if __name__ == "__main__":
     try:
@@ -123,18 +124,24 @@ if __name__ == "__main__":
             Collision_detection_index = [0,0]
 
         #adjust Camera Offset
-        H_ee_camera = Frame_Trans.EE_cam_offset(detector.get_H_ee_camera(), 'x', 0.035)
-        H_ee_camera = Frame_Trans.EE_cam_offset(H_ee_camera, 'y', -0.01)
-
-
+        H_ee_camera = Frame_Trans.EE_cam_offset(detector.get_H_ee_camera(), 'x', 0.0)
         print("all_block_pose", Pose)
         print(Collision_detection_index)
         # Get the block pose in camera frame
         Block_pos_robot_frame = Frame_Trans.compute_object_pose(Pose, H_ee_camera, T, T_obj_to_end,Collision_detection_index)
+        #use rrt
+        q_now = arm.get_positions()
+        fk = FK()
+        _,T_now = fk.forward(q_now)
+        target = quickly_cal_H(T_now*Block_target_robot_frame,x,y,z,rx,ry,rz,seed)    #I don't know how to use the quick function to get q
+        path = rrt(all_block_pose,q_now,target)
+        for pathpoint in path:
+            arm.safe_move_to_position(pathpoint)
 
+        '''
         Basic_action.static_pre_grab(arm,Block_pos_robot_frame, IK_pos, arm.get_positions())
+        '''
         Basic_action.static_grab(arm,Block_pos_robot_frame, IK_pos, arm.get_positions())
-
         Basic_action.static_place(arm,Block_target_robot_frame,Stacked_Layers,IK_pos,Place_seed)
         Basic_action.static_leave(arm, FK.forward(arm.get_positions())[1], IK_pos,arm.get_positions())
 

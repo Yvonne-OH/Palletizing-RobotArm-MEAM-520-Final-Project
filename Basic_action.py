@@ -13,26 +13,41 @@ def Gripper_control(arm,command):
     if command=="open":
         while (arm.get_gripper_state().get('position')[0]<0.0375):
             #arm.open_gripper()
-            arm.exec_gripper_cmd(arm._gripper.MAX_WIDTH * (1 - 1e-2))
-            print("Closing gripper.... Pos:",arm.get_gripper_state().get('position')[0])
+            #arm.exec_gripper_cmd(0.05,force=0.1)
+            
+            arm.exec_gripper_cmd(arm._gripper.MAX_WIDTH * (1 - 1e-2),force=0.1)
+            rospy.sleep(1.0)
+            print("Opening gripper.... Pos:",arm.get_gripper_state().get('position')[0])
     if command == "close":
         while (arm.get_gripper_state().get('position')[0]>0.03):
-            arm.exec_gripper_cmd(0.022)
-            time.sleep(1.0)
+            arm.exec_gripper_cmd(0.0,force=0)
+            #time.sleep(1.0)
             rospy.sleep(1.0)
-            print("opening gripper.... Pos:",arm.get_gripper_state().get('position')[0])
+            print("closing gripper.... Pos:",arm.get_gripper_state().get('position')[0])
             #arm.close_gripper()
 
-def move_to_static_initial_search_position(arm):
+def move_to_static_initial_search_position(arm,team):
     t = time_in_seconds()
-    q_static_search=np.array([0.28856799,0.20482551,0.08279217,-1.06908351,-0.01759427,1.27327017,1.14987698])
+    if team=="blue":
+        #blue
+        q_static_search=np.array([0.28856799,0.20482551,0.08279217,-1.06908351,-0.01759427,1.27327017,1.14987698])
+    else:
+        #red
+        q_static_search=[-0.20603583,0.2071489,- 0.18643621, - 1.06894567, 0.03989059,1.27282757,0.40853973]
+
     arm.safe_move_to_position(q_static_search)
     print("move_to_static_search_position: ", time_in_seconds() - t)
     print("Search Pos arrived!")
 
-def move_to_static_pre_search_position(arm):
+def move_to_static_pre_search_position(arm,team):
     t = time_in_seconds()
-    q_static_search=np.array([ 0.19967448,0.04253223 , 0.15891895 ,-1.68476423 ,-0.00680944 , 1.72674117,1.14490333])
+    if team=="blue":
+        #blue
+        q_static_search=np.array([ 0.19967448,0.04253223 , 0.15891895 ,-1.68476423 ,-0.00680944 , 1.72674117,1.14490333])
+    else:
+        #red
+        q_static_search=[-0.17560717,0.04270053,- 0.18358759,- 1.68477457,0.00787935,1.72673995,0.42513846]
+
     arm.safe_move_to_position(q_static_search)
     print("move_to_static_pre_search_position: ", time_in_seconds() - t)
     print("Pre Search Pos arrived!")
