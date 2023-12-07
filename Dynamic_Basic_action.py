@@ -46,7 +46,7 @@ def dynamic_place(arm,Target_H,Stacked_Layers,IK_pos,seed):
     q_pseudo, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(Block_target_robot_frame, seed=seed,
                                                                               method='J_pseudo', alpha=.5)
     arm.safe_move_to_position(q_pseudo)
-    Block_target_robot_frame[2, 3] -= 0.05
+    Block_target_robot_frame[2, 3] -= 0.03
     q_pseudo, rollout_pseudo, success_pseudo, message_pseudo = IK_pos.inverse(Block_target_robot_frame, seed=arm.get_positions(),
                                                                               method='J_pseudo', alpha=.5)
     #print("pre_place", q_pseudo)
