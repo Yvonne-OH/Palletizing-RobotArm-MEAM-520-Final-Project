@@ -18,6 +18,8 @@ import lib.IK_position_null
 import Helper_function
 import Frame_Trans
 import Basic_action
+from Basic_action import Gripper_control
+import Dynamic_Basic_action
 import Collision_detection
 
 import numpy as np
@@ -84,6 +86,7 @@ if __name__ == "__main__":
     FK=FK()
     IK_pos=lib.IK_position_null.IK()
 
+    #################################### Static Blocks #######################################
     Basic_action.move_to_static_initial_search_position(arm,team)
     p, T = FK.forward(arm.get_positions())
 
@@ -123,8 +126,11 @@ if __name__ == "__main__":
             Collision_detection_index = [0,0]
 
         #adjust Camera Offset
-        H_ee_camera = Frame_Trans.EE_cam_offset(detector.get_H_ee_camera(), 'x', 0.035)
-        H_ee_camera = Frame_Trans.EE_cam_offset(H_ee_camera, 'y', -0.01)
+        H_ee_camera = Frame_Trans.EE_cam_offset(detector.get_H_ee_camera(), 'x', 0.0)   # 12.8 Robot1 2 需要重新调整
+        H_ee_camera = Frame_Trans.EE_cam_offset(H_ee_camera, 'y', 0.0)
+        
+        # H_ee_camera = Frame_Trans.EE_cam_offset(detector.get_H_ee_camera(), 'x', 0.035) 
+        # H_ee_camera = Frame_Trans.EE_cam_offset(H_ee_camera, 'y', -0.01)
 
 
         print("all_block_pose", Pose)
@@ -145,6 +151,78 @@ if __name__ == "__main__":
 
         if Remaining_blocks>0:
             Basic_action.move_to_static_pre_search_position(arm,team)
+    print("Static Task Complete! ", "Time: ", time_in_seconds()-t_start)    
+    
+    #################################### Dynamic Blocks #######################################
+    Place_seed=np.array([-0.12021102-0.3 , 0.20148171 ,-0.17911063 ,-2.02175873 , 0.0447598 ,  2.21961924,0.46256746])
+    if team == 'blue':
+        Pre_grab_pos = np.array([ 0.17542, -1.06209, -1.74489, -2.01193, -0.31041,  2.16587, -0.69733]) # 12.4 ################## grab_H y-axis = -0.58
+        # grab_pos = np.array([0.73588, -1.39156, -1.73435, -1.11631, -0.5597,   1.80013, -0.64694])# 12.4 #######################
+        grab_pos = np.array([0.74096, -1.37193, -1.79418, -1.12827, -0.508,    1.83376, -0.67953])# 12.7 #######################
+        # Solved by IK using:
+        # grab_H = np.array([[ 0.70710678, 0, 0.70710678,  4e-4],
+        #                 [0, -1, 0, -0.75],
+        #                 [0.70710678, 0, -0.70710678,  0.215],  # 12.7 降低了抓取高度
+        #                 [ 0.,  0., 0., 1. ]]
+        #                 )
+        Dyn_Block_target_robot_frame = np.array([
+                [0.70710678, -1.86573745e-09, 0.70710678, 5.62000000e-01],
+                [-1.86573734e-09, -1.00000000e+00, -2.44297205e-09, -1.69000000e-01],
+                [0.70710678, 2.44297209e-09, -0.70710678, 2.38000000e-01],  # 12.8 梅杰： 我暂时降低了放置位置的高度，到时候可能要调整
+                [0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 1.00000000e+00]
+            ])
+        Pre_place_pos = np.array([-0.17131, -0.29179, -0.14215, -1.98463,  0.2873,  2.42964, 0.31471]) # 12.6 Block_target_robot_frame z-axis = 0.6m
+    else:
+        Pre_grab_pos = np.array([0.48809,  0.51159,  0.96594, -2.00384,  0.42852,  2.13287, -1.2014 ]) # 12.4 ##################
+        # grab_pos = np.array([0.95701,  0.99621,  0.74759, -1.13606,  0.17998,  1.87404, -0.96179])
+        grab_pos = np.array([0.98493,  0.99437,  0.69333, -1.14293,  0.2234,   1.88858, -0.99483]) # 12.7
+        # Solved by IK using:
+        # target = np.array([[ -0.70710678, 0, -0.70710678,  0],
+        #                     [0, 1, 0, 0.75],
+        #                     [0.70710678, 0, -0.70710678,  0.215],     ## 12.7 降低了抓取高度
+        #                     [ 0.,  0., 0., 1. ]]
+        #                     )   
+        Dyn_Block_target_robot_frame = np.array([
+                [0, 1, 0, 5.62000000e-01],
+                [0.70710678, 0, 0.70710678, 1.69000000e-01],    # 12.8 梅杰： 我暂时降低了放置位置的高度，到时候可能要调整
+                [0.70710678, 0, -0.70710678, 2.38000000e-01],   # 12.7 To 顾恩霖： 由于抓取不在方块正中心，记得改这个放置位置的坐标，不要太高扔下去，x和y可能也有偏移。不行的话dynamic就叠另一堆
+                [0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 1.00000000e+00]
+            ]) 
+        Pre_place_pos = np.array([0.01909,  0.03751,  0.01723, -1.48918,  0.78321, 1.56588, -0.72771]) # 12.6       
+        
+    arm.safe_move_to_position(Pre_grab_pos) ### Move to position above the pre-grab!        
+    while not rospy.is_shutdown(): # ############ if static tasks is completed NEEDS TO BE CHANGED  IMPORTANT!!!!! ##################
+        arm.safe_move_to_position(grab_pos)
+        # Judge Function determining whether the block is grabbed successfully.
+        def is_block_grabbed(arm):
+            gripper_state = arm.get_gripper_state()
+            positions = gripper_state['position']
+            width = abs(positions[1] + positions[0]) # detect the width between the jaws
+            print("The grip width is: ",width)
+            # return width <= 0.07 # Temp
+            # return 0.05 <= width <= 0.07 # Simulation
+            return 0.038 <= width <= 0.051 # Real condition
 
-    print("Complete! ", "Time: ", time_in_seconds()-t_start)
+        # test = is_block_grabbed(arm)
+        while not rospy.is_shutdown(): # IMPORTANT: The loop condition might need to be changed!
+            Gripper_control(arm, "close")
+            print("loop grip closed")
+            # Check if the block is grabbed
+            if is_block_grabbed(arm):
+                print("Block grabbed successfully!")
+                # If grabbed successfully, put the block to the aim stack
+                arm.safe_move_to_position(Pre_place_pos)
+                Dynamic_Basic_action.dynamic_place(arm,Dyn_Block_target_robot_frame,Stacked_Layers,IK_pos,Place_seed) # Name Change to: Dyn_Block_target_robot_frame
+                Dynamic_Basic_action.dynamic_leave(arm, FK.forward(arm.get_positions())[1], IK_pos,arm.get_positions())
+                break
+            else:
+                print("Grab unsuccessful, retrying...")
+            # arm.open_gripper()
+            Gripper_control(arm, "open")
+            rospy.sleep(7.0) # 12.7：增加开爪子时间
+            print("loop grip opened!")
+        arm.safe_move_to_position(Pre_grab_pos) ### Move to position above the pre-grab!
+        Stacked_Layers += 1    
+        
+    
 
