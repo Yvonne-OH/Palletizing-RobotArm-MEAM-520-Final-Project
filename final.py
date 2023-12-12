@@ -72,6 +72,7 @@ if __name__ == "__main__":
             [-5.89874377e-09, 2.44297209e-09, -1.00000000e+00, 2.50000000e-01],
             [0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 1.00000000e+00]
         ])
+        
     else:
         Block_target_robot_frame = np.array([
             [1.00000000e+00, -1.86573745e-09, -5.89874375e-09, 5.62000000e-01],
@@ -126,9 +127,12 @@ if __name__ == "__main__":
             Collision_detection_index = [0,0]
 
         #adjust Camera Offset
-        H_ee_camera = Frame_Trans.EE_cam_offset(detector.get_H_ee_camera(), 'x', 0.0)   # 12.8 Robot1 2 需要重新调整
-        H_ee_camera = Frame_Trans.EE_cam_offset(H_ee_camera, 'y', 0.0)
-        
+        if team == 'blue':
+            H_ee_camera = Frame_Trans.EE_cam_offset(detector.get_H_ee_camera(), 'x', 0.00)   # 12.11 Robot2 需要重新调整
+            H_ee_camera = Frame_Trans.EE_cam_offset(H_ee_camera, 'y', 0.0)
+        else:
+            H_ee_camera = Frame_Trans.EE_cam_offset(detector.get_H_ee_camera(), 'x', 0.005)   # 12.11
+            H_ee_camera = Frame_Trans.EE_cam_offset(H_ee_camera, 'y', 0.02)
         # H_ee_camera = Frame_Trans.EE_cam_offset(detector.get_H_ee_camera(), 'x', 0.035) 
         # H_ee_camera = Frame_Trans.EE_cam_offset(H_ee_camera, 'y', -0.01)
 
@@ -184,7 +188,7 @@ if __name__ == "__main__":
         #                     )   
         Dyn_Block_target_robot_frame = np.array([
                 [0, 1, 0, 5.57000000e-01],                      # 12.9 x -0.005m (0.5cm) y -0.007m (0.7cm)
-                [0.70710678, 0, 0.70710678, 1.62000000e-01],    # 12.8 梅杰： 我暂时降低了放置位置的高度，到时候可能要调整
+                [0.70710678, 0, 0.70710678, 1.6900000e-01],    # 12.8 梅杰： 我暂时降低了放置位置的高度，到时候可能要调整
                 [0.70710678, 0, -0.70710678, 2.38000000e-01],   # 12.7 To 顾恩霖： 由于抓取不在方块正中心，记得改这个放置位置的坐标，不要太高扔下去，x和y可能也有偏移。不行的话dynamic就叠另一堆
                 [0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 1.00000000e+00]
             ]) 

@@ -20,7 +20,7 @@ def Gripper_control(arm,command):
             print("Opening gripper.... Pos:",arm.get_gripper_state().get('position')[0])
     if command == "close":
         while (arm.get_gripper_state().get('position')[0]>0.03):
-            arm.exec_gripper_cmd(0.0,force=0)
+            arm.exec_gripper_cmd(0.0,force=5)
             #time.sleep(1.0)
             rospy.sleep(1.0)
             print("closing gripper.... Pos:",arm.get_gripper_state().get('position')[0])
