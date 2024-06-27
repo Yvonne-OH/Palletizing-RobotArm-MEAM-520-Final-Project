@@ -1,3 +1,5 @@
+
+[![Video Cover](Slides/MEAM 520 Final Pre_页面_01.png)](Pic/videoplayback.mp4)
 ![示例图片](Report/MEAM_520_Final_Project_页面_01.png)
 ![示例图片](Report/MEAM_520_Final_Project_页面_02.png)
 ![示例图片](Report/MEAM_520_Final_Project_页面_03.png)
