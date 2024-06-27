@@ -1,7 +1,9 @@
+Video Link:
+https://www.bilibili.com/video/BV1VG32erEhs/?spm_id_from=333.999.0.0
 [![Watch the video](https://figes.com.tr/wp-content/uploads/2021/01/Robots-Square.jpg)](https://www.bilibili.com/video/BV1VG32erEhs/?spm_id_from=333.999.0.0)
 
 
-[![Video Cover](Slides/MEAM 520 Final Pre_页面_01.png)]([Pic/videoplayback.mp4](https://www.bilibili.com/video/BV1VG32erEhs/?spm_id_from=333.999.0.0))
+
 ![示例图片](Report/MEAM_520_Final_Project_页面_01.png)
 ![示例图片](Report/MEAM_520_Final_Project_页面_02.png)
 ![示例图片](Report/MEAM_520_Final_Project_页面_03.png)
