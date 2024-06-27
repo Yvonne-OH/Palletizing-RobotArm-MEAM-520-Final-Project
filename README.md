@@ -1,4 +1,4 @@
-[![Watch the video](https://img.youtube.com/vi/<VIDEO_ID>/hqdefault.jpg)](https://www.bilibili.com/video/BV1VG32erEhs/?spm_id_from=333.999.0.0)
+[![Watch the video](Slides/MEAM 520 Final Pre_页面_01.png)](https://www.bilibili.com/video/BV1VG32erEhs/?spm_id_from=333.999.0.0)
 
 
 [![Video Cover](Slides/MEAM 520 Final Pre_页面_01.png)]([Pic/videoplayback.mp4](https://www.bilibili.com/video/BV1VG32erEhs/?spm_id_from=333.999.0.0))
